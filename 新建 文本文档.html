@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未发送的草稿 | 完整剧情版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+
+        body {
+            background: #121217 no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
+            color: #eaeaea;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            line-height: 1.8;
+            transition: background 0.8s ease-in-out;
+            animation: bgFade 1.2s ease-in-out;
+        }
+
+        @keyframes bgFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .game-box {
+            width: 100%;
+            max-width: 700px;
+            background-color: rgba(30, 30, 40, 0.85);
+            padding: 40px 35px;
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.4);
+            backdrop-filter: blur(6px);
+        }
+
+        .title-text {
+            text-align: center;
+            color: #c9cde0;
+            font-size: 22px;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+        }
+
+        .story-text {
+            font-size: 16px;
+            color: #d8d8e8;
+            min-height: 200px;
+            margin-bottom: 35px;
+            text-align: left;
+        }
+
+        .btn-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .choice-btn {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #44475a;
+            background: rgba(45,45,63,0.6);
+            color: #eaeaea;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .choice-btn:hover {
+            background-color: #2d2d3f;
+            border-color: #8288b8;
+        }
+
+        .end-tip {
+            color: #a9a9c8;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .music-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <audio id="bgm" loop muted preload="auto">
+        <source src="https://www.aigei.com/sound/down/916960819124273152" type="audio/mpeg">
+    </audio>
+    <button class="music-btn" id="musicToggle">🔇 点击开启音乐</button>
+
+    <div class="game-box">
+        <h2 class="title-text">未发送的草稿</h2>
+        <div class="story-text" id="story"></div>
+        <div class="btn-box" id="btns"></div>
+    </div>
+
+    <script>
+        // 全场景氛围配色
+        const BG = {
+            start: "#1a1a24",
+            coffee: "#242433",
+            shop: "#20202e",
+            rain: "#151922",
+            sick: "#1c202b",
+            cold: "#1c1c28",
+            empty: "#14141d",
+            station: "#191926",
+            end: "#181822"
+        };
+
+        function setBg(color){
+            document.body.style.background = color;
+        }
+
+        // 音乐控制
+        const bgm = document.getElementById('bgm');
+        const musicToggle = document.getElementById('musicToggle');
+        let musicOn = false;
+
+        musicToggle.onclick = function(){
+            if(!musicOn){
+                bgm.muted = false;
+                bgm.play();
+                musicToggle.innerText = "🔊 音乐播放中";
+                musicOn = true;
+            }else{
+                bgm.muted = true;
+                musicToggle.innerText = "🔇 音乐已关闭";
+                musicOn = false;
+            }
+        }
+
+        const storyDom = document.getElementById('story');
+        const btnsDom = document.getElementById('btns');
+
+        function clearBtn() { btnsDom.innerHTML = ''; }
+
+        function typeText(text, speed = 30) {
+            return new Promise(resolve => {
+                storyDom.innerText = '';
+                let i = 0;
+                const timer = setInterval(() => {
+                    storyDom.innerText += text[i];
+                    i++;
+                    if (i >= text.length) { clearInterval(timer); resolve(); }
+                }, speed);
+            })
+        }
+
+        function addBtn(text, func) {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.innerText = text;
+            btn.onclick = func;
+            btnsDom.appendChild(btn);
+        }
+
+        // 全局分支记录（用于结局彩蛋旁白）
+        let branch = {
+            scene2: "",
+            scene4: "",
+            scene6: ""
+        };
+
+        // 序章
+        async function startGame() {
+            setBg(BG.start);
+            storyDom.classList.remove('end-tip');
+            await typeText('你正在收拾搬家纸箱，在角落里摸到了一个冰凉坚硬的物体。拿出来一看，是她当年落下的一部旧手机。\n屏幕黑着，你按了一下电源键，屏幕上微弱地闪了一下红色的低电量图标，随后彻底熄灭。但在黑屏前的那一瞬，你依稀看清了锁屏壁纸——那是你们在大海边的一张合影，那时候你们笑得很傻，但很真。\n你手里捏着那根旧数据线，看着黑掉的屏幕，指尖轻轻摩挲着手机边缘的磨损痕迹，陷入了沉思。');
+            addBtn('A. 插上电源充电，等待开机', sceneA);
+            addBtn('B. 算了，都是过去的事了，直接扔进杂物箱', sceneB);
+        }
+
+        async function sceneB() {
+            clearBtn();
+            await typeText('有些回忆，确实不适合再被唤醒。\n\n【游戏结束】');
+            storyDom.classList.add('end-tip');
+            addBtn('返回上一选项', startGame);
+        }
+
+        async function sceneA() {
+            clearBtn();
+            await typeText('你插上电源，充电指示灯亮起微弱的红光。几分钟后，手机震动，屏幕亮起，熟悉的锁屏壁纸再次映入眼帘。你划开屏幕，点开了那个熟悉的备忘录应用。');
+            setTimeout(firstScene, 800);
+        }
+
+        // 第一幕 初识 咖啡馆
+        async function firstScene() {
+            setBg(BG.coffee);
+            storyDom.classList.remove('end-tip');
+            await typeText('【第一幕：初识】\n那是大三的冬天，你们第一次约会。她点了一杯热拿铁，因为太烫，她皱着眉轻轻吹气，眼神却一直偷偷往你这边瞟。');
+            addBtn('A. 把自己的冰水推给她：“喝这个吧，解解烫。”', firstA);
+            addBtn('B. 笑着看着她，什么也没说，只是把自己的杯子往她那边挪了挪', firstB);
+        }
+
+        async function firstA() {
+            clearBtn();
+            await typeText('那时候我不懂，她其实只是想让我多看看她。');
+            setTimeout(secondScene, 800);
+        }
+
+        async function firstB() {
+            clearBtn();
+            await typeText('她后来告诉我，那一刻她觉得我很温柔。');
+            setTimeout(secondScene, 800);
+        }
+
+        // 第二幕 新增：热恋 深夜便利店
+        async function secondScene() {
+            setBg(BG.shop);
+            storyDom.classList.remove('end-tip');
+            await typeText('【第二幕：热恋】\n那是你们在一起后的第一个冬天。半夜两点，她突然想吃关东煮。你们穿着睡衣拖鞋，手牵手走在空无一人的街道上。便利店的灯光很暖，她吃得满嘴是汤。');
+            addBtn('A. 拿出纸巾，宠溺地帮她擦嘴：“小馋猫，慢点吃。”', secondA);
+            addBtn('B. 笑着拍了一张她狼吞虎咽的丑照，设成了手机壁纸', secondB);
+        }
+
+        async function secondA() {
+            clearBtn();
+            branch.scene2 = "A";
+            await typeText('那一刻，我觉得时间静止了，希望这条路永远走不到头。');
+            setTimeout(thirdScene, 800);
+        }
+
+        async function secondB() {
+            clearBtn();
+            branch.scene2 = "B";
+            await typeText('那张照片后来成了她的“黑历史”，每次看到都要追着我打，但眼里全是笑意。');
+            setTimeout(thirdScene, 800);
+        }
+
+        // 第三幕 暴雨争吵
+        async function thirdScene() {
+            setBg(BG.rain);
+            storyDom.classList.remove('end-tip');
+            await typeText('【第三幕：争吵】\n因为一件琐事，你们在街头大吵一架。她红着眼眶转身要走，雨开始下了。她没有带伞，背影在雨幕中显得格外单薄。');
+            addBtn('A. 追上去拉住她的手腕，大声说：“不许走！”', thirdA);
+            addBtn('B. 站在原地，默默撑开伞，快步走到她头顶为她遮雨，不说话', thirdB);
+        }
+
+        async function thirdA() {
+            clearBtn();
+            await typeText('她的手腕被你抓住的瞬间，身体猛地一颤。紧接着，她用力甩开了你的手，力气大得让你愣在原地。\n她回过头，雨水打湿了她的头发，眼神里不再是委屈，而是深深的疲惫：“你总是这样，从来不听我在说什么，只觉得我在闹脾气。你爱的只是你自己。”\n她转身跑进雨里，再也没有回头。\n\n【结局：错过的雨季】\n有时候，抓得越紧，失去得越快。');
+            storyDom.classList.add('end-tip');
+            addBtn('返回上一选项', thirdScene);
+        }
+
+        async function thirdB() {
+            clearBtn();
+            await typeText('你站在原地，默默撑开伞，快步走到她头顶为她遮雨，不说话。\n雨点砸在伞面上，发出沉闷的声响。她停下脚步，没有回头，但也没有再往前走。你感觉到她的肩膀在微微颤抖。你把伞往她那边倾斜，哪怕自己的半边身子淋在雨里。\n良久，她轻轻叹了口气，转过身，接过了你手中的伞柄。');
+            setTimeout(fourScene, 800);
+        }
+
+        // 第四幕 新增：生病夜晚
+        async function fourScene() {
+            setBg(BG.sick);
+            storyDom.classList.remove('end-tip');
+            await typeText('【第四幕：脆弱】\n她发着高烧，躺在床上迷迷糊糊。你请了假在家照顾她。半夜她醒来，看着坐在床边守着的你，声音沙哑地问：“你会一直陪着我吗？”');
+            addBtn('A. 握紧她的手，坚定地说：“会，一直都在。”', fourA);
+            addBtn('B. 摸了摸她的额头，轻声说：“先把烧退了再说，傻瓜。”', fourB);
+        }
+
+        async function fourA() {
+            clearBtn();
+            branch.scene4 = "A";
+            await typeText('她安心地睡着了，嘴角还带着笑。那是我们最靠近彼此灵魂的时刻。');
+            setTimeout(fiveScene, 800);
+        }
+
+        async function fourB() {
+            clearBtn();
+            branch.scene4 = "B";
+            await typeText('她眼神黯淡了一下，转过身背对着我。其实我只是不善言辞，但那时候的她，需要的是承诺。');
+            setTimeout(fiveScene, 800);
+        }
+
+        // 第五幕 冷战
+        async function fiveScene() {
+            setBg(BG.cold);
+            storyDom.classList.remove('end-tip');
+            await typeText('【第五幕：冷战】\n分手前的一周。你们坐在同一个客厅，她在刷手机，你在打游戏。空气安静得可怕。其实你想打破僵局，但你不知道该说什么。');
+            addBtn('A. 放下手机，走过去从背后抱住她，把头埋在她的颈窝', fiveA);
+            addBtn('B. 假装去厨房倒水，切了一盘她爱吃的水果放在她面前', fiveB);
+        }
+
+        async function fiveA() {
+            clearBtn();
+            await typeText('那个拥抱很紧，但我能感觉到她的身体是僵硬的。有些裂痕，不是拥抱就能填补的。');
+            setTimeout(sixScene, 800);
+        }
+
+        async function fiveB() {
+            clearBtn();
+            await typeText('她看了一眼水果，没有动。我们都在等对方先开口，直到最后谁也没说话。');
+            setTimeout(sixScene, 800);
+        }
+
+        // 第六幕 新增：戒断
+        async function sixScene() {
+            setBg(BG.empty);
+            storyDom.classList.remove('end-tip');
+            await typeText('【第六幕：戒断】\n分手后的第一个月。你习惯性地买了两杯奶茶回家，走到门口才想起来，已经没有人等你了。房间里空荡荡的，只有牙刷杯还是成对的。');
+            addBtn('A. 把两杯奶茶都喝光，假装她还在', sixA);
+            addBtn('B. 把多买的那杯奶茶扔进垃圾桶，把成对的牙刷杯收进抽屉', sixB);
+        }
+
+        async function sixA() {
+            clearBtn();
+            branch.scene6 = "A";
+            await typeText('甜味在嘴里化开，心里却苦得要命。自欺欺人，是我最后的倔强。');
+            setTimeout(sevenScene, 800);
+        }
+
+        async function sixB() {
+            clearBtn();
+            branch.scene6 = "B";
+            await typeText('垃圾桶里的奶茶还在滴水，像极了那天雨里的眼泪。我终于开始学着接受没有你的生活。');
+            setTimeout(sevenScene, 800);
+        }
+
+        // 第七幕 离别车站
+        async function sevenScene() {
+            setBg(BG.station);
+            storyDom.classList.remove('end-tip');
+            await typeText('【第七幕：离别】\n这是你们最后一次见面。她在车站等车，准备去另一个城市工作。广播里催促着检票。她看着你，眼神里似乎还有一丝期待。');
+            addBtn('A. 冲上去抱住她，说：“别走了，留下来。”', sevenA);
+            addBtn('B. 帮她提行李，微笑着说：“到了那边，照顾好自己。”', sevenB);
+        }
+
+        async function sevenA() {
+            clearBtn();
+            await typeText('你冲上去抱住她，她轻轻推开你，眼里含着泪：“如果这句话早半年说，该多好。”\n她转身进了检票口，消失在人海里。');
+            setTimeout(endScene, 1000);
+        }
+
+        async function sevenB() {
+            clearBtn();
+            await typeText('你帮她提过行李，轻声叮嘱。她点了点头，接过行李：“你也是。”\n她转身进了检票口，一次也没有回头。');
+            setTimeout(endScene, 1000);
+        }
+
+        // 终章
+        async function endScene() {
+            setBg(BG.end);
+            storyDom.classList.remove('end-tip');
+            await typeText('【终章：告别】\n回忆落幕。你看着手里这部旧手机，备忘录的最后一行字迹清晰：\n「其实我一直都在等他挽留我。哪怕只有一次，坚定的选择我。」\n\n手机屏幕微微亮起，弹出一行提示：\n是否要把这条未发送的草稿，发送给她？');
+            addBtn('A. 点击【发送】', endA);
+            addBtn('B. 长按【删除】，将手机放回箱底', endB);
+        }
+
+        // 结局1：回响（带分支彩蛋）
+        async function endA() {
+            clearBtn();
+            let text = '页面加载片刻，弹出冰冷的系统提示：\n【发送失败，对方已不是您的好友】\n\n你淡淡苦笑，心里积压多年的郁结忽然落地。你终于说出了当年没敢说的话，哪怕再也没有回音。\n你合上纸箱，推开窗户，晚风与阳光一同涌进新的房间。\n\n【结局：回响】\n遗憾终会释然，告别亦是成长。';
+            if(branch.scene2 === "B") text += '\n\n至少，我曾给过她最快乐的时光。';
+            if(branch.scene4 === "B") text += '\n\n如果那时候我能多说一句“我爱你”，结局会不会不一样。';
+            await typeText(text);
+            storyDom.classList.add('end-tip');
+            addBtn('返回上一选项', endScene);
+        }
+
+        // 结局2：珍藏（带分支彩蛋）
+        async function endB() {
+            clearBtn();
+            let text = '你长按文字，点击删除。屏幕微光褪去，归于平静。\n你忽然明白，有些话只适合留在过去，不必揭晓。\n这段感情已然落幕，但便利店的晚风、病床前的守候，那些温柔的瞬间全部真实存在过。\n你关机，妥善收好旧手机，转身准备开启新的生活。\n\n【结局：珍藏】\n过往不入新局，旧事归于山河。';
+            if(branch.scene6 === "B") text += '\n\n扔掉那杯奶茶的时候，我知道，我也该向前走了。';
+            await typeText(text);
+            storyDom.classList.add('end-tip');
+            addBtn('返回上一选项', endScene);
+        }
+
+        window.onload = startGame;
+    </script>
+</body>
+</html>
